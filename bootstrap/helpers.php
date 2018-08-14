@@ -1,4 +1,5 @@
 <?php
-function test_helper() {
-	return 'this is a test and it is OK~';
+function route_class()
+{
+	return str_replace('.','_',Route::currentRouteName());
 }
