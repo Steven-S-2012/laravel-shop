@@ -12,4 +12,13 @@
 */
 
 Route::get('/', 'PagesController@root')->name('root');
+Route::get('phpinfo', function (){
+    phpinfo();
+});
 
+
+Auth::routes();
+
+/* Already has index 'root' so delete it.
+ * Route::get('/home', 'HomeController@index')->name('home');
+ */
