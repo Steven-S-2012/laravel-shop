@@ -25,6 +25,12 @@ class User extends Authenticatable
         'email_verified'=>'boolean',
     ];
 
+    //make relationship with UserAddress table (User <-> UserAddress || 1 <-> many)
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
     /**
      * The attributes that should be hidden for arrays.
      *
