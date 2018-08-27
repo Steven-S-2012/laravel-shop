@@ -8,6 +8,7 @@ use Cache;
 use Illuminate\Http\Request;
 use App\Notifications\EmailVerificationNotification;
 use Mail;
+use App\Exceptions\InvalidRequestException;
 
 class EmailVerificationController extends Controller
 {
@@ -19,19 +20,19 @@ class EmailVerificationController extends Controller
 
         //if any of them is empty, means verification link is wrong. Throw exception
         if (!$email || !$token) {
-            throw new Exception('Verification is unavailable');
+            throw new InvalidRequestException('Verification Link is incorrect.');
         }
 
         //if load those two from cache, compare 'token' from both cache and url
         //if cache's 'token' is null or unmatch with the url's 'token',
         //then throw exception.
         if ($token != Cache::get('email_verification_'.$email)) {
-            throw new Exception('验证链接不正确或已过期');
+            throw new InvalidRequestException('Verification Link is incorrect or expired.');
         }
 
         //Search user form database according email address
         if (!$user = User::where('email', $email)->first()) {
-            throw new Exception('用户不存在');
+            throw new InvalidRequestException('User is not exist.');
         }
 
         //Delete key from cache.
@@ -41,7 +42,7 @@ class EmailVerificationController extends Controller
         $user->update(['email_verified' => true]);
 
         //Notify user that email verification is success
-        return view('pages.success', ['msg' => '邮箱验证成功']);
+        return view('pages.success', ['msg' => 'Email verified successfully!']);
     }
 
     public function send(Request $request)
@@ -50,7 +51,7 @@ class EmailVerificationController extends Controller
 
         //check whether it is verified
         if ($user->email_verified) {
-            throw new Exception('Already verified.');
+            throw new InvalidRequestException('Email address already verified.');
         }
 
         //call notify() method to send notification class

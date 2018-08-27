@@ -23,7 +23,7 @@ Route::group(['middleware'=>'auth'], function(){
     Route::group(['middleware'=>'email_verified'], function(){
 
         });
-    });
+
     //END
 });
 
