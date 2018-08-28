@@ -9,19 +9,19 @@
 	<meta name="csrf-token" content="{{ csrf_token() }}">
 
 	<title>@yield('title', 'Laravel Shop') - Wallace Online Market</title>
-<!-- type -->
-<link href="{{ mix('css/app.css') }}" rel="stylesheet">
+    <!-- type -->
+    <link href="{{ mix('css/app.css') }}" rel="stylesheet">
 </head>
 <body>
-<div id="app" class="{{ route_class() }}-page">
-    @include('layouts._header')
-    <div class="container">
-        @yield('content')
+    <div id="app" class="{{ route_class() }}-page">
+        @include('layouts._header')
+        <div class="container">
+            @yield('content')
+        </div>
+        @include('layouts._footer')
     </div>
-    @include('layouts._footer')
-</div>
-
-<!-- js script -->
-<script src="{{ mix('js/app.js') }}"></script>
+    <!-- JS 脚本 -->
+    <script src="{{ mix('js/app.js') }}"></script>
+    @yield('scriptsAfterJs')
 </body>
 </html>
