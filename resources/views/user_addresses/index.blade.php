@@ -7,6 +7,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 Post Address List
+                <a href="{{ route('user_addresses.create') }}" class="pull-right">Add</a>
             </div>
             <div class="panel-body">
                 <table class="table table-bordered table-striped">
@@ -27,8 +28,8 @@
                         <td>{{ $address->zip }}</td>
                         <td>{{ $address->contact_phone }}</td>
                         <td>
-                            <button class="btn btn-primary">Modify</button>
-                            <button class="btn btn-danger">Delete</button>
+                            <a href="{{ route('user_addresses.edit', ['user_address' => $address->id]) }}" class="btn btn-primary">修改</a>
+                            <button class="btn btn-danger">删除</button>
                         </td>
                     </tr>
                     @endforeach
