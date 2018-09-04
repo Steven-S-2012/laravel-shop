@@ -12,7 +12,7 @@ Route::group([
 
     $router->get('/', 'HomeController@index');
     $router->resource('users', 'UsersController');
-    //$router->resource('auth/users', 'UserController');
+    $router->resource('products', 'ProductsController');
     //$router->get('users', 'UsersController@index');
     //$router->delete('users/{id}', 'UsersController@destroy');
     //$router->get('users/{id}/edit', 'UsersController@edit');
