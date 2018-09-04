@@ -29,11 +29,11 @@ class CreateProductsTable extends Migration
             $table->integer('weight');
             $table->string('image');
             $table->string('category');
-            $table->unsignedInteger('barcode');
+            $table->string('barcode');
             $table->decimal('gst');
             $table->decimal('cost');
             $table->decimal('real_cost');
-            $table->unsignedInteger('barcode_family');
+            $table->string('barcode_family');
             $table->text('description');
             $table->integer('stock');
             $table->text('specialnote');

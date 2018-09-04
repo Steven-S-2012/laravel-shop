@@ -53,7 +53,7 @@ class ProductsController extends Controller
     public function edit($id, Content $content)
     {
         return $content
-            ->header('Edit')
+            ->header('Edit Product')
             ->description('description')
             ->body($this->form()->edit($id));
     }
@@ -67,8 +67,8 @@ class ProductsController extends Controller
     public function create(Content $content)
     {
         return $content
-            ->header('Create')
-            ->description('description')
+            ->header('Create Product')
+            //->description('description')
             ->body($this->form());
     }
 
@@ -81,11 +81,11 @@ class ProductsController extends Controller
     {
         $grid = new Grid(new Product);
 
-        $grid->id('Id')->sortable();
-        $grid->title('Title')->sortable;
+        $grid->id('ID')->sortable();
+        $grid->title('Title')->sortable();
         $grid->size('Size');
         $grid->price('Price');
-        $grid->price_m_au('Price m au');
+//        $grid->price_m_au('Price m au');
 //        $grid->price_vip_au('Price vip au');
 //        $grid->price_vvip_au('Price vvip au');
         $grid->price_rmb('Price rmb');
@@ -177,9 +177,10 @@ class ProductsController extends Controller
     {
         $form = new Form(new Product);
 
-        $form->text('title', 'Title');
+        $form->text('title', 'Title')->rules('required');
+        $form->text('barcode', 'Barcode')->rules('required');
         $form->number('size', 'Size');
-        $form->decimal('price', 'Price');
+        $form->decimal('price', 'Price')->rules('required');
         $form->decimal('price_m_au', 'Price m au');
         $form->decimal('price_vip_au', 'Price vip au');
         $form->decimal('price_vvip_au', 'Price vvip au');
@@ -189,20 +190,32 @@ class ProductsController extends Controller
         $form->decimal('price_vvip_rmb', 'Price vvip rmb');
         $form->text('title_en', 'Title en');
         $form->number('weight', 'Weight');
-        $form->image('image', 'Image');
+        $form->image('image', 'Image')->rules('required|image');
         $form->text('category', 'Category');
-        $form->number('barcode', 'Barcode');
         $form->decimal('gst', 'Gst');
-        $form->decimal('cost', 'Cost');
+        $form->decimal('cost', 'Cost')->rules('required');
         $form->decimal('real_cost', 'Real cost');
-        $form->number('barcode_family', 'Barcode family');
-        $form->textarea('description', 'Description');
+        $form->text('barcode_family', 'Barcode family');
+        $form->editor('description', 'Description');
         $form->number('stock', 'Stock');
         $form->textarea('specialnote', 'Specialnote');
-        $form->switch('on_sale', 'On sale')->default(1);
+        $form->radio('on_sale', 'On Sale')->options(['1' => 'Yes', '0' => 'No'])->default('0');
+        //$form->switch('on_sale', 'On sale')->default(1);
         $form->decimal('rating', 'Rating')->default(5.00);
         $form->number('sold_count', 'Sold count');
         $form->number('review_count', 'Review count');
+
+        $form->hasMany('skus', 'SKU List', function (Form\NestedForm $form) {
+            $form->text('title', 'SKU Name')->rules('required');
+            $form->text('description', 'SKU Description')->rules('required');
+            $form->text('price', 'Price')->rules('required|numeric|min:0.01');
+            $form->text('stock', 'Stock')->rules('required|integer|min:0');
+        });
+
+        $form->saving(function (Form $form) {
+           $form->model()->price = collect($form->input('skus'))->where(Form::REMOVE_FLAG_NAME, 0)
+               ->min('price') ? : 0;
+        });
 
         return $form;
     }
