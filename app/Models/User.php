@@ -32,6 +32,18 @@ class User extends Authenticatable
     }
 
     /**
+     * pivot table for the users and products
+     * multi to multi relationship
+     */
+    public function favoriteProducts()
+    {
+        return $this->belongsToMany(Products::class, 'user_favorite_products')
+            ->withTimestamps()
+            ->orderBy('user_favorite_products.created_at', 'desc');
+    }
+
+
+    /**
      * The attributes that should be hidden for arrays.
      *
      * @var array

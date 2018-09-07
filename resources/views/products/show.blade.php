@@ -50,7 +50,11 @@
                             <label>Amount</label><input type="text" class="form-control input-sm" value="1"><span class="stock"></span>
                         </div>
                         <div class="buttons">
-                            <button class="btn btn-success btn-favor">❤ Collect</button>
+                            @if($favored)
+                                <button class="btn btn-danger btn-disfavor">Cancel Collection</button>
+                            @else
+                                <button class="btn btn-success btn-favor">❤ Collect</button>
+                            @endif
                             <button class="btn btn-primary btn-add-to-cart">Add to cart</button>
                         </div>
                     </div>
@@ -80,6 +84,45 @@
             $('.sku-btn').click(function () {
                 $('.product-info .price span').text($(this).data('price'));
                 $('.product-info .stock').text('Stock：' + $(this).data('stock'));
+            });
+
+            // listen click button event
+            $('.btn-favor').click(function () {
+
+                // post a ajax application, url generated from route() function at backend
+                axios.post('{{ route('products.favor', ['product' => $product->id]) }}')
+                    .then(function () {
+                        // callback will excute when application successed
+                        swal('Application Success!', '', 'success')
+                            .then(function (){
+                                location.reload();
+                            });
+                    }, function(error) {
+
+                        // run this callback if application failed
+                        // 401 means didnt login
+                        if (error.response && error.response.status === 401) {
+                            swal('Please login.', '', 'error');
+
+                        } else if (error.response && error.response.data.msg) {
+                            //other situation show msg string to user
+                            swal(error.response.data.msg, '', 'error');
+
+                        }  else {
+                            // system failed
+                            swal('System Error.', '', 'error');
+                        }
+                    });
+            });
+
+            $('.btn-disfavor').click(function () {
+                axios.delete('{{ route('products.disfavor', ['product' => $product->id]) }}')
+                    .then(function () {
+                        swal('Application Success!', '', 'success')
+                            .then(function () {
+                                location.reload();
+                            });
+                    });
             });
         });
     </script>

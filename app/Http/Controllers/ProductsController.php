@@ -73,6 +73,36 @@ class ProductsController extends Controller
             throw new InvalidRequestException('Product is not on-sale!');
         }
 
-        return view('products.show', ['product' => $product]);
+        $favored = false;
+
+        //when didnt login, return null, otherwise return user object.
+        if($user = $request->user()) {
+
+            //select collected product whose id is same with current id
+            //boolval() convert to boolean value.
+            $favored = boolval($user->favoriteProducts()->find($product->id));
+        }
+
+        return view('products.show', ['product' => $product, 'favored' => $favored]);
+    }
+
+    public function favor(Product $product, Request $request)
+    {
+        $user = $request->user();
+        if ($user->favoriteProducts()->find($product->id)) {
+            return [];
+        }
+
+        $user->favoriteProducts()->attach($product);
+
+        return [];
+    }
+
+    public function disfavor(Product $product, Request $request)
+    {
+        $user = $request->user();
+        $user->favoriteProducts()->detach($product);
+
+        return [];
     }
 }
