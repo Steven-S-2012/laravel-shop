@@ -3,10 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Models\ProductSku;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
-//class AddCartRequest extends FormRequest
-class AddCartRequest extends Request
+//class OrderRequest extends FormRequest
+class OrderRequest extends Request
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -20,55 +21,45 @@ class AddCartRequest extends Request
 
     /**
      * Get the validation rules that apply to the request.
-     * @param  sku_id
-     * @param  amount
+     *
      * @return array
-     * closure check implement on both sku_id and amount contains 3 test.
-     * Sku_id check No.2 pass 3 paras: checking attribute name, value and fail info.
      */
     public function rules()
     {
         return [
-            'sku_id' => [
+            //check submitted ID exist and belong to user
+            //to prevent that user traverse each address & id
+            'address_id'     => ['required', Rule::exists('user_addresses', 'id')->where('user_id', $this->user()->id)],
+            'items'          => ['required', 'array'],
+            'items.*.sku_id' => [ //check sku_id in each subarray of items array
                 'required',
                 function ($attribute, $value, $fail) {
                     if (!$sku = ProductSku::find($value)) {
                         $fail('Product does not exist!');
                         return;
                     }
-
                     if (!$sku->product->on_sale) {
                         $fail('Product is unavailable!');
                         return;
                     }
-
-                    if ($sku->stock ===0) {
+                    if ($sku->stock === 0) {
                         $fail('Product sold out!');
                         return;
                     }
 
-                    if ($this->input('amount') > 0 && $sku->stock < $this->input('amount')) {
-                        $fail('Product does not have enough stock!');
+                    //get current index
+                    preg_match('/items\.(\d+)\.sku_id/', $attribute, $m);
+                    $index  = $m[1];
+
+                    //find amount attribute according index
+                    $amount = $this->input('items')[$index]['amount'];
+                    if ($amount > 0 && $amount > $sku->stock) {
+                        $fail('Out of stock!');
                         return;
                     }
                 },
             ],
-
-            'amount' => ['required', 'integer', 'min:1'],
-        ];
-    }
-
-    public function attributes()
-    {
-        return [
-            'amount' => 'Stock Amount'
-        ];
-    }
-
-    public function messages()
-    {
-        return [
-            'sku_id.required' => 'Please select a product!'
+            'items.*.amount' => ['required', 'integer', 'min:1'],
         ];
     }
 }

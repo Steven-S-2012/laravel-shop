@@ -9,7 +9,7 @@ class CreateOrderItemsTable extends Migration
     /**
      * Run the migrations.
      *
-     * 字段名称	            描述	            类型	        加索引缘由
+     * 字段名称	          描述	            类型	        加索引缘由
         id	            自增长ID	        unsigned int	主键
         order_id	    所属订单ID	    unsigned int	外键
         product_id	    对应商品ID	    unsigned int	外键
