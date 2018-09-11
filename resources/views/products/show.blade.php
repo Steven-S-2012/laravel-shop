@@ -30,7 +30,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div skus>
+                        <div class="skus">
                             <label>Selection:</label>
                             <div class="btn-group" data-toggle="buttons">
                                 @foreach($product->skus as $sku)
@@ -47,7 +47,9 @@
                             </div>
                         </div>
                         <div class="cart_amount">
-                            <label>Amount</label><input type="text" class="form-control input-sm" value="1"><span class="stock"></span>
+                            <label>Amount:  </label>
+                            <input type="text" class="form-control input-sm" value="1">
+                            <span class="stock"></span>
                         </div>
                         <div class="buttons">
                             @if($favored)
@@ -80,37 +82,35 @@
 @section('scriptsAfterJs')
     <script>
         $(document).ready(function () {
+
             $('[data-toggle="tooltip"]').tooltip({trigger: 'hover'});
+
             $('.sku-btn').click(function () {
                 $('.product-info .price span').text($(this).data('price'));
                 $('.product-info .stock').text('Stock：' + $(this).data('stock'));
             });
 
-            // listen click button event
+            // Listen collect btn click event
+
             $('.btn-favor').click(function () {
 
-                // post a ajax application, url generated from route() function at backend
+                //post a ajax application, require route() from backend to create a url
                 axios.post('{{ route('products.favor', ['product' => $product->id]) }}')
-                    .then(function () {
-                        // callback will excute when application successed
-                        swal('Application Success!', '', 'success')
+                    .then(function () { // if success
+                        swal('Operation Success!', '', 'success')
                             .then(function (){
                                 location.reload();
-                            });
-                    }, function(error) {
-
-                        // run this callback if application failed
-                        // 401 means didnt login
+                        });
+                    }, function(error) { // if failed
+                        // return 401 => did not login
                         if (error.response && error.response.status === 401) {
-                            swal('Please login.', '', 'error');
-
+                            swal('Please Login!', '', 'error');
                         } else if (error.response && error.response.data.msg) {
-                            //other situation show msg string to user
+                            // if other error message, print out
                             swal(error.response.data.msg, '', 'error');
-
                         }  else {
-                            // system failed
-                            swal('System Error.', '', 'error');
+                            // otherwise system error
+                            swal('System Error!', '', 'error');
                         }
                     });
             });
@@ -118,12 +118,59 @@
             $('.btn-disfavor').click(function () {
                 axios.delete('{{ route('products.disfavor', ['product' => $product->id]) }}')
                     .then(function () {
-                        swal('Application Success!', '', 'success')
+                        swal('Operation Success!', '', 'success')
                             .then(function () {
                                 location.reload();
                             });
                     });
             });
-        });
+
+            //Add to cart click event
+            $('.btn-add-to-cart').click(function () {
+
+                //call the api of add to cart
+                axios.post('{{ route('cart.add') }}', {
+                    sku_id: $('label.active input[name=skus]').val(),
+                    amount: $('.cart_amount input').val(),
+                })
+                    // stay at detail page after warning sign
+                    // .then(function () {
+                    //     //if success run this callback function
+                    //     swal('Add successfully!', '', 'success');
+                    // }, function (error) {
+
+                    .then(function () {
+                        //if success run this callback function
+                        swal('Add successfully!', '', 'success')
+                            .then(function() {
+                                location.href = '{{ route('cart.index') }}';
+                            });
+                    }, function (error) {
+                        //if failed run this callback
+                        if (error.response.status === 401) {
+
+                            //http status = 401 means unlogin
+                            swal('Please Login!', '', 'error');
+
+                        } else if (error.response.status === 422) {
+
+                            //http status = 422 means user input check is failed
+                            var html = '<div>';
+                            _.each(error.response.data.errors, function (errors) {
+                                _.each(errors, function (error) {
+                                    html += error + '<br>';
+                                })
+                            });
+                            html += '</div>';
+                            swal({content: $(html)[0], icon: 'error'})
+
+                        } else {
+
+                            //otherwise system error
+                            swal('System Error!', '', 'error');
+                        }
+                    })
+            });
+        })
     </script>
 @endsection

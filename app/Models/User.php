@@ -37,11 +37,15 @@ class User extends Authenticatable
      */
     public function favoriteProducts()
     {
-        return $this->belongsToMany(Products::class, 'user_favorite_products')
+        return $this->belongsToMany(Product::class, 'user_favorite_products')
             ->withTimestamps()
             ->orderBy('user_favorite_products.created_at', 'desc');
     }
 
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
 
     /**
      * The attributes that should be hidden for arrays.

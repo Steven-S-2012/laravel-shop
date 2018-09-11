@@ -37,7 +37,7 @@
                         @endforeach
                     </div>
                     <div class="pull-right">
-                        {{ $product->render() }}
+                        {{ $products->render() }}
                     </div>
                 </div>
             </div>
