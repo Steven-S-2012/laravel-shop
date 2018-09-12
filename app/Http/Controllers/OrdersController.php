@@ -7,12 +7,15 @@ use App\Http\Requests\OrderRequest;
 use App\Models\ProductSku;
 use App\Models\UserAddress;
 use App\Models\Order;
+use App\Jobs\CloseOrder;
 use Carbon\Carbon;
 
 class OrdersController extends Controller
 {
     public function store (OrderRequest $request)
     {
+        $user  = $request->user();
+
         //start a DB transaction
         $order = \DB::transaction(function () use ($user, $request) {
             $address = UserAddress::find($request->input('address_id'));
@@ -69,6 +72,8 @@ class OrdersController extends Controller
             return $order;
 
         });
+
+        $this->dispatch(new CloseOrder($order, config('app.order_ttl')));
 
         return $order;
     }

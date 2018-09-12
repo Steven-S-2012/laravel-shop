@@ -201,7 +201,7 @@
                             swal('System Error', '', 'error');
                         }
                     });
-            });        
+            });
         });
     </script>
 @endsection
