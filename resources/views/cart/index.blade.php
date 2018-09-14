@@ -183,7 +183,10 @@
                 });
                 axios.post('{{ route('orders.store') }}', req)
                     .then(function (response) {
-                        swal('Submit Success!', '', 'success');
+                        swal('Submit Success!', '', 'success')
+                            .then(() => {
+                                location.href = '/orders/' + response.data.id;
+                            });
                     }, function (error) {
                         if (error.response.status === 422) {
 

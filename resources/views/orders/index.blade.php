@@ -70,7 +70,7 @@
                                                             @endif
                                                         </td>
                                                         <td rowspan="{{ count($order->items) }}" class="text-center">
-                                                            <a class="btn btn-primary btn-xs" href="">
+                                                            <a class="btn btn-primary btn-xs" href="{{ route('orders.show', ['order' => $order->id]) }}">
                                                                 Order Details
                                                             </a>
                                                         </td>
