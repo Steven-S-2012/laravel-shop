@@ -374,8 +374,8 @@ body {
       display: flex;
       flex-direction: row;
       .line-label {
-        width: 80px;
-        text-align: right;
+        width: 100px;
+        text-align: left;
       }
       .line-value {
         flex-shrink: 100;
@@ -395,5 +395,9 @@ body {
       width: 150px;
       padding-right: 20px;
     }
+  }
+  .payment-buttons {
+    margin-top: 10px;
+    padding-right: 20px;
   }
 }

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', '查看订单')
+@section('title', 'Order Details')
 
 @section('content')
     <div class="row">
@@ -27,9 +27,9 @@
                                         </a>
                                     </div>
                                     <div>
-            <span class="product-title">
-               <a target="_blank" href="{{ route('products.show', [$item->product_id]) }}">{{ $item->product->title }}</a>
-             </span>
+                                        <span class="product-title">
+                                           <a target="_blank" href="{{ route('products.show', [$item->product_id]) }}">{{ $item->product->title }}</a>
+                                        </span>
                                         <span class="sku-title">{{ $item->productSku->title }}</span>
                                     </div>
                                 </td>
@@ -45,7 +45,7 @@
                     <div class="order-bottom">
                         <div class="order-info">
                             <div class="line">
-                                <div class="line-label">Post Address：</div><div class="line-value">{{ join(' ', $order->address) }}</div>
+                                <div class="line-label">Post Address ：</div><div class="line-value">{{ join(' ', $order->address) }}</div>
                             </div>
                             <div class="line">
                                 <div class="line-label">Order Remark：</div><div class="line-value">{{ $order->remark ?: '-' }}</div>
@@ -75,6 +75,14 @@
                                     @endif
                                 </div>
                             </div>
+                            <!--payment button -->
+                            @if(!$order->paid_at && !$order->closed)
+                                <div class="payment-buttons">
+                                    <a class="btn btn-primary btn-sm" href="{{ route('payment.alipay', ['order' => $order->id]) }}">
+                                        AliPay
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

@@ -27,7 +27,9 @@ class AppServiceProvider extends ServiceProvider
     {
         //inject 'alipay' instance into container
         $this->app->singleton('alipay', function () {
-            $config = config('pay.alipay');
+            $config               = config('pay.alipay');
+            $config['notify_url'] = route('payment.alipay.notify');
+            $config['return_url'] = route('payment.alipay.return');
 
             //check whether this project operation env is 'production'
             if (app()->environment() !== 'production') {
