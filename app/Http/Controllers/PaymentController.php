@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Exceptions\InvalidRequestException;
 use Illuminate\Http\Request;
-use Carbon/Carbon;
+use Carbon\Carbon;
+use Endroid\QrCode\QrCode;
 
 class PaymentController extends Controller
 {
@@ -68,5 +69,58 @@ class PaymentController extends Controller
 
         return app('alipay')->success();
 //        \Log::debug('Alipay notify', $data->all());
+    }
+
+    public function payByWechat(Order $order, Request $request)
+    {
+        //authorization check
+        $this->authorize('own', $order);
+
+        //check order status
+        if ($order->paid_at || $order->closed) {
+            throw new InvalidRequestException('Order Status Error!');
+        }
+
+        //call 'scan' function for wechat payment
+        $wechatOrder = app('wechat_pay')->scan([
+            'out_trade_no'  => $order->no,
+            'total_fee'     => $order->total_amount * 100,  //wechat calculation unit is cend
+            'body'          => 'Wallace Order No：'.$order->no,
+        ]);
+
+        //Construct function para for QrCode
+        $qrCode = new QrCode($wechatOrder->code_url);
+
+        //output orcode picture as string together with response type
+        return response($qrCode->writeString(), 200, ['Content-Type' => $qrCode->getContentType()]);
+    }
+
+    public function wechatNotify()
+    {
+        //check callback paras
+        $data = app('wechat_pay')->verify();
+
+        //find that order
+        $order = Order::where('no', $data->out_trade_no)->first();
+
+        //if does not exist
+        if(!$order) {
+            return 'fail';
+        }
+
+        //if paid
+        if ($order->paid_at) {
+
+            return app('wechat_pay')->success();
+        }
+
+        //mark as paid
+        $order->update([
+            'paid_at'        => Carbon::now(),
+            'payment_method' => 'wechat',
+            'payment_no'     => $data->transaction_id,
+        ]);
+
+        return app('wechat_pay')->success();
     }
 }

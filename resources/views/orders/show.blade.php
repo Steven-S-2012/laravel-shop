@@ -81,6 +81,10 @@
                                     <a class="btn btn-primary btn-sm" href="{{ route('payment.alipay', ['order' => $order->id]) }}">
                                         AliPay
                                     </a>
+                                    <button class="btn btn-sm btn-success" id='btn-wechat'>WeChat</button>
+                                    {{--<a class="btn btn-success btn-sm" href="{{ route('payment.wechat', ['order' => $order->id]) }}">--}}
+                                        {{--WeChat--}}
+                                    {{--</a>--}}
                                 </div>
                             @endif
                         </div>
@@ -89,4 +93,28 @@
             </div>
         </div>
     </div>
+@endsection
+@section('scriptsAfterJs')
+    <script>
+        $(document).ready(function() {
+            //wechat payment event
+            $('#btn-wechat').click(function() {
+                swal({
+                    //content can be a DOM element,
+                    //create a img tag by jQuery dynamiclly
+                    //[0] is target element
+                    content: $('<img src="{{ route('payment.wechat', ['order' => $order->id]) }}" />')[0],
+
+                    //buttons para show button text
+                    buttons: ['Close', 'Paid'],
+                })
+                    .then(function(result) {
+                        //if click 'paid', reload page
+                        if (result) {
+                            location.reload();
+                        }
+                    })
+            });
+        });
+    </script>
 @endsection

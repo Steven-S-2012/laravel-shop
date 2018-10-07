@@ -28,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
         //inject 'alipay' instance into container
         $this->app->singleton('alipay', function () {
             $config               = config('pay.alipay');
-            $config['notify_url'] = route('payment.alipay.notify');
+            $config['notify_url'] = 'http://requestbin.fullcontact.com/[自己的url]'; //test website
+//  实际代码 $config['notify_url'] = route('payment.alipay.notify');
             $config['return_url'] = route('payment.alipay.return');
 
             //check whether this project operation env is 'production'
@@ -45,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton('wechat_pay', function () {
             $config = config('pay.wechat');
+            $config['notify_url'] = 'http://requestbin.fullcontact.com/[自己的url]'; //test website
             if (app()->environment() !== 'production') {
                 $config['log']['level'] = Logger::DEBUG;
             } else {
