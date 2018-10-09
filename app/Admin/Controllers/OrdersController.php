@@ -23,6 +23,10 @@ class OrdersController extends Controller
      * @param Content $content
      * @return Content
      */
+//    public function index()
+//    {
+//        return Admin::content(function (Content $content) {
+
     public function index(Content $content)
     {
         return $content
@@ -38,12 +42,13 @@ class OrdersController extends Controller
      * @param Content $content
      * @return Content
      */
-    public function show($id, Content $content)
+    public function show(Content $content, Order $order)
     {
         return $content
-            ->header('Detail')
-            ->description('description')
-            ->body($this->detail($id));
+            ->header('Order Detail')
+            //->description('description')
+            // use views as body's paras
+            ->body(view('admin.orders.show', ['order' => $order]));
     }
 
     /**
@@ -82,6 +87,7 @@ class OrdersController extends Controller
      */
     protected function grid()
     {
+        //return Admin::grid(Order::class, function (Grid $grid) {
         $grid = new Grid(new Order);
         $grid->model()->whereNotNull('paid_at')->orderBy('paid_at', 'desc');
 
