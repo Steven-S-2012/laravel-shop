@@ -11,6 +11,9 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 //use Encore\Admin\Controllers\ModelForm;
 use Encore\Admin\Show;
+use Illuminate\Http\Request;
+use App\Exceptions\InvalidRequestException;
+use Illuminate\Validation\UnauthorizedException;
 
 
 class OrdersController extends Controller
@@ -58,13 +61,13 @@ class OrdersController extends Controller
      * @param Content $content
      * @return Content
      */
-    public function edit($id, Content $content)
-    {
-        return $content
-            ->header('Edit')
-            ->description('description')
-            ->body($this->form()->edit($id));
-    }
+//    public function edit($id, Content $content)
+//    {
+//        return $content
+//            ->header('Edit')
+//            ->description('description')
+//            ->body($this->form()->edit($id));
+//    }
 
     /**
      * Create interface.
@@ -72,13 +75,13 @@ class OrdersController extends Controller
      * @param Content $content
      * @return Content
      */
-    public function create(Content $content)
-    {
-        return $content
-            ->header('Create')
-            ->description('description')
-            ->body($this->form());
-    }
+//    public function create(Content $content)
+//    {
+//        return $content
+//            ->header('Create')
+//            ->description('description')
+//            ->body($this->form());
+//    }
 
     /**
      * Make a grid builder.
@@ -194,5 +197,38 @@ class OrdersController extends Controller
         $form->textarea('extra', 'Extra');
 
         return $form;
+    }
+
+    public function ship(Order $order, Request $request)
+    {
+        //check whether this order has been paid
+        if (!$order->paid_at) {
+            throw new InvalidRequestException('Order has not been paid!');
+        }
+
+        //check whether order has been shipped
+        if ($order->ship_status !== Order::SHIP_STATUS_PENDING) {
+            throw new InvalidRequestException('Order has been shipped!');
+        }
+
+        //validate() return value which passed verification
+        $data = $this->validate($request, [
+            'express_company' => ['required'],
+            'express_no'      => ['required'],
+        ], [], [
+            'express_company'   => ['Delivery Company'],
+            'express_no'        => ['Delivery No.'],
+        ]);
+
+        //update ship_status
+        $order->update([
+            'ship_status' => Order::SHIP_STATUS_DELIVERED,
+
+            //$casts in Order Model defines ship_data is an array
+            'ship_data'   => $data,
+        ]);
+
+        //return last page
+        return redirect()->back();
     }
 }
