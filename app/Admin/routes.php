@@ -13,6 +13,7 @@ Route::group([
     $router->get('/', 'HomeController@index');
     $router->resource('users', 'UsersController');
     $router->resource('products', 'ProductsController');
+    $router->get('orders', 'OrdersController@index')->name('admin.orders.index');
     //$router->get('users', 'UsersController@index');
     //$router->delete('users/{id}', 'UsersController@destroy');
     //$router->get('users/{id}/edit', 'UsersController@edit');
