@@ -45,14 +45,26 @@
                     <div class="order-bottom">
                         <div class="order-info">
                             <div class="line">
-                                <div class="line-label">Post Address ：</div><div class="line-value">{{ join(' ', $order->address) }}</div>
+                                <div class="line-label">Post Address:</div><div class="line-value">{{ join(' ', $order->address) }}</div>
                             </div>
                             <div class="line">
-                                <div class="line-label">Order Remark：</div><div class="line-value">{{ $order->remark ?: '-' }}</div>
+                                <div class="line-label">Order Remark:</div><div class="line-value">{{ $order->remark ?: '-' }}</div>
                             </div>
                             <div class="line">
-                                <div class="line-label">Order Number：</div><div class="line-value">{{ $order->no }}</div>
+                                <div class="line-label">Order Number:</div><div class="line-value">{{ $order->no }}</div>
                             </div>
+                            {{--delivery status--}}
+                            <div class="line">
+                                <div class="line-label">Delivery Status:</div>
+                                <div class="line-value">{{ \App\Models\Order::$shipStatusMap[$order->ship_status] }}</div>
+                            </div>
+                            {{--if delivery status then dipaly--}}
+                            @if($order->ship_data)
+                                <div class="line">
+                                    <div class="line-label">Delivery Details:</div>
+                                    <div class="line-value">{{ $order->ship_data['express_company'] }} {{ $order->ship_data['express_no'] }}</div>
+                                </div>
+                            @endif
                         </div>
                         <div class="order-summary text-right">
                             <div class="total-amount">
@@ -87,6 +99,17 @@
                                     {{--</a>--}}
                                 </div>
                             @endif
+                            {{--if shipment status is shipped then show confirm button--}}
+                            @if($order->ship_status === \App\Models\Order::SHIP_STATUS_DELIVERED)
+                                <div class="receive-button">
+                                    {{--<form method="post" action="{{ route('orders.received', [$order->id]) }}">--}}
+                                        {{--{{ csrf_field() }}--}}
+                                        {{--<button type="submit" class="btn btn-sm btn-success">Confirm</button>--}}
+                                    {{--</form>--}}
+                                    {{--double confirm receive--}}
+                                    <button type="button" id="btn-receive" class="btn btn-sm btn-success">Confirm</button>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -114,6 +137,30 @@
                             location.reload();
                         }
                     })
+            });
+
+            //Delivery confirmation click event
+            $('#btn-receive').click(function() {
+               //confirmation box
+               swal({
+                   title: "Delivery Confirmation",
+                   icon: "warning",
+                   buttons: true,
+                   dangerMode: true,
+                   buttons: ['Cancel', 'Confirm'],
+               })
+                   .then(function(ret) {
+                       //if cancel (ret)
+                       if (!ret) {
+                           return;
+                       }
+                       //ajax confirm action
+                       axios.post('{{ route('orders.received', [$order->id]) }}')
+                           .then(function () {
+                               //reload page
+                               location.reload();
+                           })
+                   });
             });
         });
     </script>
