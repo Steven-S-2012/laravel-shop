@@ -112,7 +112,7 @@ class OrdersController extends Controller
 
         //check whether it is shipped
         if ($order->ship_status !== Order::SHIP_STATUS_DELIVERED) {
-            throw new InvalidRequestException('发货状态不正确');
+            throw new InvalidRequestException('Delivery Status Error');
         }
 
         //Update shipment status
