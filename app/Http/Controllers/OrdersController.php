@@ -8,6 +8,7 @@ use App\Services\OrderService;
 use App\Http\Requests\OrderRequest;
 use App\Models\UserAddress;
 use App\Models\Order;
+use App\Events\OrderReviewed;
 //use App\Services\CartService;
 //use Carbon\Carbon;
 //use App\Models\ProductSku;
@@ -121,5 +122,57 @@ class OrdersController extends Controller
         //back to last page
         //return redirect()->back();
         return $order;
+    }
+
+    public function review(Order $order)
+    {
+        //authorization check
+        $this->authorize('own', $order);
+
+        //check if paid
+        if (!$order->paid_at) {
+            throw new InvalidRequestException('Cannot rating due to unpaid!');
+        }
+
+        //load() method load relating data, avoid N+1 issue
+        return view('orders.review', ['order' => $order->load(['items.productSku', 'items.product'])]);
+    }
+
+    public function sendReview(Order $order, SendReviewRequest $request)
+    {
+        //authorization check
+        $this->authorize('own', $order);
+        if (!$order->paid_at) {
+            throw new InvalidRequestException('Cannot rating due to unpaid!');
+        }
+
+        //check if rating
+        if ($order->reviewed) {
+            throw new InvalidRequestException('Order already rated!');
+        }
+        $reviews = $request->input('reviews');
+
+        //trigger transaction
+        \DB::transaction(function () use ($reviews, $order) {
+            //traverse data
+            foreach ($reviews as $review) {
+                $orderItem = $order->items()->find($review['id']);
+
+                //save rating & comment
+                $orderItem->update([
+                    'rating'      => $review['rating'],
+                    'review'      => $review['review'],
+                    'reviewed_at' => Carbon::now(),
+                ]);
+            }
+
+            //mark order as rated
+            $order->update(['reviewed' => true]);
+
+            //trigger event
+            event(new OrderReviewed($order));
+        });
+
+        return redirect()->back();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Exceptions\InvalidRequestException;
@@ -75,7 +76,7 @@ class ProductsController extends Controller
 
         $favored = false;
 
-        //when didnt login, return null, otherwise return user object.
+        //when didn't login, return null, otherwise return user object.
         if($user = $request->user()) {
 
             //select collected product whose id is same with current id
@@ -83,7 +84,19 @@ class ProductsController extends Controller
             $favored = boolval($user->favoriteProducts()->find($product->id));
         }
 
-        return view('products.show', ['product' => $product, 'favored' => $favored]);
+        $reviews = OrderItem::query()
+            ->with(['order.user', 'productSku']) // preload
+            ->where('product_id', $product->id)
+            ->whereNotNull('reviewed_at') // select rated
+            ->orderBy('reviewed_at', 'desc') // group by desc
+            ->limit(10) // first 10
+            ->get();
+
+        return view('products.show', [
+            'product' => $product,
+            'favored' => $favored,
+            'reviews' => $reviews
+        ]);
     }
 
     public function favor(Product $product, Request $request)
