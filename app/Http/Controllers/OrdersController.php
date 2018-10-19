@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\InvalidRequestException;
+use App\Http\Requests\ApplyRefundRequest;
 use Illuminate\Http\Request;
 use App\Services\OrderService;
 use App\Http\Requests\OrderRequest;
@@ -174,5 +175,33 @@ class OrdersController extends Controller
         });
 
         return redirect()->back();
+    }
+
+    public function applyRefund(Order $order, ApplyRefundRequest $request)
+    {
+        //authorization check
+        $this->authorize('own', $order);
+
+        //check if paid
+        if (!$order->paid_at) {
+            throw new InvalidRequestException('Order unpaid! Refund unavailable');
+        }
+
+        //check refund status
+        if ($order->refund_status !== Order::REFUND_STATUS_PENDING) {
+            throw new InvalidRequestException('Refund applicated!');
+        }
+
+        //submit refund excuse to extra field
+        $extra                  = $order->extra ? : [];
+        $extra['refund_reason'] = $request->input('reason');
+
+        //update refund status
+        $order->update([
+            'refund_status' => Order::REFUND_STATUS_APPLIED,
+            'extra'         => $extra,
+        ]);
+
+        return $order;
     }
 }

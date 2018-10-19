@@ -65,6 +65,17 @@
                                     <div class="line-value">{{ $order->ship_data['express_company'] }} {{ $order->ship_data['express_no'] }}</div>
                                 </div>
                             @endif
+                            {{--order paid and refund status is not refund, then display refund info --}}
+                            @if($order->paid_at && $order->refund_status !== \App\Models\Order::REFUND_STATUS_PENDING)
+                                <div class="line">
+                                    <div class="line-label">Refund Status:</div>
+                                    <div class="line-value">{{ \App\Models\Order::$refundStatusMap[$order->refund_status] }}</div>
+                                </div>
+                                <div class="line">
+                                    <div class="line-label">Refund Reason:</div>
+                                    <div class="line-value">{{ $order->extra['refund_reason'] }}</div>
+                                </div>
+                            @endif
                         </div>
                         <div class="order-summary text-right">
                             <div class="total-amount">
@@ -108,6 +119,12 @@
                                     {{--</form>--}}
                                     {{--double confirm receive--}}
                                     <button type="button" id="btn-receive" class="btn btn-sm btn-success">Confirm</button>
+                                </div>
+                            @endif
+                            {{--if order paid and refund status is not refund then show refund button--}}
+                            @if($order->paid_at && $order->refund_status === \App\Models\Order::REFUND_STATUS_PENDING)
+                                <div class="refund-button">
+                                    <button class="btn btn-sm btn-danger" id="btn-apply-refund">Refund</button>
                                 </div>
                             @endif
                         </div>
@@ -161,6 +178,29 @@
                                location.reload();
                            })
                    });
+            });
+
+            //refund button click event
+            $('#btn-apply-refund').click(function () {
+                swal({
+                    text: 'Enter refund reason:',
+                    content: 'input',
+                }).then(function (input) {
+                    //if click button in pop-up box, trigger this function
+                    if(!input) {
+                        swal('Must has a refund reason!', '', 'error');
+                        return;
+                    }
+
+                    //applicate refund api
+                    axios.post('{{ route('orders.apply_refund', [$order->id]) }}', {reason: input})
+                        .then(function () {
+                            swal('Refund Success!', '', 'success').then(function () {
+                                //reload page when click button
+                                location.reload();
+                            });
+                        });
+                });
             });
         });
     </script>
