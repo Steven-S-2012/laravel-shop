@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Models\Order;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\HandleRefundRequest;
 use Encore\Admin\Controllers\HasResourceActions;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -230,5 +231,30 @@ class OrdersController extends Controller
 
         //return last page
         return redirect()->back();
+    }
+
+    public function handleRefund(Order $order, HandleRefundRequest $request)
+    {
+        //check order status
+        if ($order->refund_status !== Order::REFUND_STATUS_APPLIED) {
+            throw new InvalidRequestException('Order Status Error!');
+        }
+
+        //check if agree refund
+        if ($request->input('agree')) {
+            //agree
+        } else {
+            //insert reject reason into extra field
+            $extra = $order->extra ?: [];
+            $extra['refund_disagree_reason'] = $request->input('reason');
+
+            //set refund status
+            $order->update([
+                'refund_status' => Order::REFUND_STATUS_PENDING,
+                'extra'         => $extra,
+            ]);
+        }
+
+        return $order;
     }
 }

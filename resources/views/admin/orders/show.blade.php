@@ -29,7 +29,7 @@
                 <td colspan="3">{{ $order->address['address'] }} {{ $order->address['zip'] }} {{ $order->address['contact_name'] }} {{ $order->address['contact_phone'] }}</td>
             </tr>
             <tr>
-                <td rowspan="{{ $order->items->count() + 1 }}">商品列表</td>
+                <td rowspan="{{ $order->items->count() + 1 }}">ProductList</td>
                 <td>Product</td>
                 <td>Price</td>
                 <td>Amount</td>
@@ -89,7 +89,73 @@
                 <td>{{ $order->ship_data['express_no'] }}</td>
             </tr>
             @endif
+            @if($order->refund_status !== \App\Models\Order::REFUND_STATUS_PENDING)
+            <tr>
+                <td>Refund Status:</td>
+                <td colspan="2">
+                    {{ \App\Models\Order::$refundStatusMap[$order->refund_status] }},
+                    Reason: {{ $order->extra['refund_reason'] }}
+                </td>
+                <td>
+                    {{--if refund applicated, show 'processing' button--}}
+                    @if($order->refund_status === \App\Models\Order::REFUND_STATUS_APPLIED)
+                        <button class="btn btn-sm btn-success" id="btn-refund-agree">Agree</button>
+                        <button class="btn btn-sm btn-danger" id="btn-refund-disagree">Disagree</button>
+                    @endif
+                </td>
+            </tr>
+            @endif
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+    $(document).ready(function() {
+        //disagree event
+        $('#btn-refund-disagree').click(function() {
+            //swal lv 1
+            swal({
+                title: 'Reject Reason',
+                type: 'input',
+                showCancelButton: true,
+                closeOnConfirm: false,
+                confirmButtonText: "Submit",
+                cancelButtonText: "Cancel",
+            }, function(inputValue) {
+                // if click 'Submit', inputValue = false
+                // === check whether click 'cancel' or no input
+                if (inputValue === false) {
+                    return;
+                }
+                if (!inputValue) {
+                    swal('Need a reason!', '', 'error')
+                    return;
+                }
+
+                // Laravel-Admin use ajax instead of axios
+                $.ajax({
+                    url: '{{ route('admin.orders.handle_refund', [$order->id]) }}',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        agree: false,
+                        reason: inputValue,
+                        //CSRF Token
+                        //Laravel-Admin page can get CSRF Token through LA.token
+                        _token: LA.token,
+                    }),
+                    contentType: 'application/json', //application data type is JSON
+                    success: function (data) {
+                        swal({
+                            title: 'Processing Success!',
+                            type: 'success'
+                        }, function() {
+                            //reload page if click button on swal
+                            location.reload();
+                        });
+                    }
+                });
+            };
+        });
+    });
+</script>
