@@ -265,7 +265,26 @@ class OrdersController extends Controller
         //check payment method
         switch ($order->payment_method) {
             case 'wechat':
-                //wechat payment
+                //generate refundNo
+                $refundNo = Order::getAvailableRefundNo();
+                app('wechat_pay')->refund([
+                    'out_trade_no'  => $order->no, // OrderNo
+                    'total_fee'     => $order->total_amount * 100, //Order price ￥分
+                    'refund_fee'    => $order->total_amount * 100, // refund amount，￥分
+                    'out_refund_no' => $refundNo, // refundNo
+                    // 微信支付的退款结果并不是实时返回的，而是通过退款回调来通知，因此这里需要配上退款回调接口地址
+                    // 由于是开发环境，需要配成 requestbin 地址，在实际中填写微信账号的退款地址
+                    'notify_url'    => 'http://requestbin.fullcontact.com/******'
+
+                    // 实际代码
+                  //'notify_url'    => route('payment.wechat.refund_notify'),
+                ]);
+
+                //update refund status
+                $order->update([
+                    'refund_no' => $refundNo,
+                    'refund_status' => Order::REFUND_STATUS_PROCESSING,
+                ]);
                 break;
 
             case 'alipay':
