@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
@@ -103,6 +104,18 @@ class Order extends Model
         \Log::warning('find order no failed');
 
         return false;
+    }
+
+    public static function getAvailableRefundNo()
+    {
+        do {
+            //generate unique string
+            $no = Uuid::uuid4()->getHex();
+
+            //check if exist same refundNo in DB
+        } while (self::query()->where('refund_no', $no)->exists());
+
+        return $no;
     }
 }
 

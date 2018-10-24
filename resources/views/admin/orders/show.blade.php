@@ -51,7 +51,8 @@
             {{--shipment--}}
             {{--if did not ship, show delivery form--}}
             @if($order->ship_status === \App\Models\Order::SHIP_STATUS_PENDING)
-            <tr>
+                @if($order->refund_status !== \App\Models\Order::REFUND_STATUS_SUCCESS)
+                <tr>
                 <td colspan="4">
                     <form action="{{ route('admin.orders.ship', [$order->id]) }}" method="post" class="form-inline">
                         {{--csrf token--}}
@@ -79,7 +80,8 @@
                         <button type="submit" class="btn btn-success" id="ship-btn">Delivery</button>
                     </form>
                 </td>
-            </tr>
+                </tr>
+                @endif
             @else
             {{--or show delivery company and No.--}}
             <tr>
@@ -156,6 +158,40 @@
                     }
                 });
             };
+        });
+
+        //Agree button click event
+        $('#btn-refund-agree').click(function() {
+            swal({
+                title: 'Do you want to refund?',
+                type: 'warning',
+                showCancelButton: true,
+                closeOnConfirm: false,
+                confirmButtonText: "Yes",
+                cancelButtonText: "No",
+            }, function(ret){
+                //click NO
+                if (!ret) {
+                    return;
+                }
+                $.ajax({
+                    url: '{{ route('admin.orders.handle_refund', [$order->id]) }}',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        agree: true, // agree to refund
+                        _token: LA.token,
+                    }),
+                    contentType: 'application/json',
+                    success: function (data) {
+                        swal({
+                            title: 'Refund Success!',
+                            type: 'success'
+                        }, function() {
+                            location.reload();
+                        });
+                    }
+                });
+            });
         });
     });
 </script>

@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Models\Order;
+use App\Exceptions\InternalException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HandleRefundRequest;
 use Encore\Admin\Controllers\HasResourceActions;
@@ -242,7 +243,8 @@ class OrdersController extends Controller
 
         //check if agree refund
         if ($request->input('agree')) {
-            //agree
+            //call refund function
+            $this->_refundOrder($order);
         } else {
             //insert reject reason into extra field
             $extra = $order->extra ?: [];
@@ -256,5 +258,51 @@ class OrdersController extends Controller
         }
 
         return $order;
+    }
+
+    protected function _refundOrder(Order $order)
+    {
+        //check payment method
+        switch ($order->payment_method) {
+            case 'wechat':
+                //wechat payment
+                break;
+
+            case 'alipay':
+                //generate refundNo
+                $refundNo = Order::getAvailableRefundNo();
+
+                //call refund function in alipay instance
+                $ret = app('alipay')->refund([
+                    'out_trade_no'   => $order->no, //Order No
+                    'refund_amount'  => $order->total_amount,  //refund amount ￥yuan
+                    'out_request_no' => $refundNo,//refund order No
+                ]);
+
+                //if sub_code string exists in return value means refund failed from alipay server
+                if ($ret->sub_code) {
+                    //save failed info
+                    $extra = $order->extra;
+                    $extra['refund_failed_code'] = $ret->sub_code;
+
+                    //mark refund status as failed
+                    $order->update([
+                        'refund_no' => $refundNo,
+                        'refund_status' => Order::REFUND_STATUS_FAILED,
+                        'extra' => $extra,
+                    ]);
+                } else {
+                    //mark refund status as success and save refundNo
+                    $order->update([
+                        'refund_no' => $refundNo,
+                        'refund_status' => Order::REFUND_STATUS_SUCCESS,
+                    ]);
+                }
+                break;
+            default:
+                //in case unexpected
+                throw new InternalException('未知订单支付方式：'.$order->payment_method);
+                break;
+        }
     }
 }
