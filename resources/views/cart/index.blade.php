@@ -87,6 +87,23 @@
                                     <textarea name="remark" class="form-control" rows="3"></textarea>
                                 </div>
                             </div>
+                            {{--coupon start--}}
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">CouponCode</label>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control" name="coupon_code">
+                                    <span class="help-block" id="coupon_desc"></span>
+                                </div>
+                                <div class="col-sm-3">
+                                    <button type="button" class="btn btn-success" id="btn-check-coupon">
+                                        Check
+                                    </button>
+                                    <button type="button" class="btn btn-danger" style="display: none;" id="btn-cancel-coupon">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                            {{--coupon start--}}
                             <div class="form-group">
                                 <div class="col-sm-offset-3 col-sm-3">
                                     <button type="button" class="btn btn-primary btn-create-order">Submit</button>
@@ -204,6 +221,48 @@
                             swal('System Error', '', 'error');
                         }
                     });
+            });
+
+            //"Check" button click event
+            $('#btn-check-coupon').click(function () {
+
+                //get couponCode user entered
+                var code = $('input[name=coupon_code]').val();
+
+                //if no input
+                if(!code) {
+                    swal('Please enter Coupon Code: ', '', 'warning');
+                    return;
+                }
+
+                //call check api
+                axios.get('/coupon_codes/' + encodeURIComponent(code))
+                    .then(function (response) {  // then() has a para which is a function. call it when applicate successfully
+                        $('#coupon_desc').text(response.data.description); // output discount info
+                        $('input[name=coupon_code]').prop('readonly', true); // disable input area
+                        $('#btn-cancel-coupon').show(); // show 'Cancel' button
+                        $('#btn-check-coupon').hide(); // hide 'Check' button
+                    }, function (error) {
+                        //if return code is 404, coupon does not exist
+                        if(error.response.status === 404) {
+                            swal('CouponCode does not exist.', '', 'error');
+                        } else if (error.response.status === 403) {
+                            //if 403, means some other conditions lost
+                            swal(error.response.data.msg, '', 'error');
+                        } else {
+                            //other error
+                            swal('System Error.', '', 'error');
+                        }
+                    })
+
+            });
+
+            //hidden button click event
+            $('#btn-cancel-coupon').click(function () {
+                $('#coupon_desc').text(''); // hidden discount info
+                $('input[name=coupon_code]').prop('readonly', false);  // enable input area
+                $('#btn-cancel-coupon').hide(); // hide 'Cancel' button
+                $('#btn-check-coupon').show(); // show 'Check' button
             });
         });
     </script>
