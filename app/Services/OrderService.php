@@ -6,16 +6,24 @@ use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\Order;
 use App\Models\ProductSku;
+use App\Models\CouponCode;
 use App\Exceptions\InvalidRequestException;
+use App\Exceptions\CouponCodeUnavailableException;
 use App\Jobs\CloseOrder;
 use Carbon\Carbon;
 
 class OrderService
 {
-    public function store(User $user, UserAddress $address, $remark, $items)
+    public function store(User $user, UserAddress $address, $remark, $items, CouponCode $coupon = null)
     {
+        //if passed coupon, check if it is available
+        if ($coupon) {
+            // need to calculate total order amount
+            $coupon->checkAvailable();
+        }
+
         //create a DB transaction
-        $order = \DB::transaction(function () use ($user, $address, $remark, $items) {
+        $order = \DB::transaction(function () use ($user, $address, $remark, $items, $coupon) {
 
             //update last time of using this address
             $address->update(['last_used_at' => Carbon::now()]);
@@ -54,6 +62,22 @@ class OrderService
                 $totalAmount += $sku->price * $data['amount'];
                 if ($sku->decreaseStock($data['amount']) <= 0) {
                     throw new InvalidRequestException('Not Enough Stock');
+                }
+            }
+
+            if ($coupon) {
+                // here has order total amount, then check if match coupon rules
+                $coupon->checkAvailable($totalAmount);
+
+                // update order amount as discounted
+                $totalAmount = $coupon->getAdjustedPrice($totalAmount);
+
+                // link order and coupon
+                $order->couponCode()->associate($coupon);
+
+                // add coupon usage, check return value
+                if ($coupon->changeUsed() <= 0) {
+                    throw new CouponCodeUnavailableException('Coupon has been used!');
                 }
             }
 

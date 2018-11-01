@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\InvalidRequestException;
+use App\Exceptions\CouponCodeUnavailableException;
 use App\Http\Requests\ApplyRefundRequest;
 use Illuminate\Http\Request;
 use App\Services\OrderService;
 use App\Http\Requests\OrderRequest;
 use App\Models\UserAddress;
+use App\Models\CouponCode;
 use App\Models\Order;
 use App\Events\OrderReviewed;
 //use App\Services\CartService;
@@ -18,12 +20,21 @@ use App\Events\OrderReviewed;
 class OrdersController extends Controller
 {
     //自动解析注入CartService Class
-    public function store (OrderRequest $request, OrderService $orderService)
+    public function store(OrderRequest $request, OrderService $orderService)
     {
         $user    = $request->user();
         $address = UserAddress::find($request->input('address_id'));
+        $coupon  = null;
 
-        return $orderService->store($user, $address, $request->input('remark'), $request->input('items'));
+        // if user submit couponCode
+        if ($code = $request->input('coupon_code')) {
+            $coupon = CouponCode::where('code', $code)->first();
+            if (!$coupon) {
+                throw new CouponCodeUnavailableException('Coupon does not exist!');
+            }
+        }
+
+        return $orderService->store($user, $address, $request->input('remark'), $request->input('items'), $coupon);
 
 //        //start a DB transaction
 //        $order = \DB::transaction(function () use ($user, $request, $cartService) {
