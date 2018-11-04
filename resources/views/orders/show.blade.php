@@ -78,6 +78,14 @@
                             @endif
                         </div>
                         <div class="order-summary text-right">
+                            {{--discount info display--}}
+                            @if($order->couponCode)
+                                <div class="text-primary">
+                                    <span>Discount Info: </span>
+                                    <div class="value">{{ $order->couponCode->description }}</div>
+                                </div>
+                            @endif
+                            {{--end of discount info--}}
                             <div class="total-amount">
                                 <span>Total Amount：</span>
                                 <div class="value"><b>$</b>{{ $order->total_amount }}</div>

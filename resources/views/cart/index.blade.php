@@ -217,6 +217,8 @@
                             });
                             html += '</div>';
                             swal({content: $(html)[0], icon: 'error'})
+                        } else if (error.response.status === 403) {
+                            swal(error.response.data.msg, '', 'error');
                         } else {
                             // System error
                             swal('System Error', '', 'error');

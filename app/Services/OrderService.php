@@ -19,7 +19,7 @@ class OrderService
         //if passed coupon, check if it is available
         if ($coupon) {
             // need to calculate total order amount
-            $coupon->checkAvailable();
+            $coupon->checkAvailable($user);
         }
 
         //create a DB transaction
@@ -67,7 +67,7 @@ class OrderService
 
             if ($coupon) {
                 // here has order total amount, then check if match coupon rules
-                $coupon->checkAvailable($totalAmount);
+                $coupon->checkAvailable($user, $totalAmount);
 
                 // update order amount as discounted
                 $totalAmount = $coupon->getAdjustedPrice($totalAmount);

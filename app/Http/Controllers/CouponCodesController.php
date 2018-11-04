@@ -9,7 +9,7 @@ use App\Exceptions\CouponCodeUnavailableException;
 
 class CouponCodesController extends Controller
 {
-    public function show($code)
+    public function show($code,Request $request)
     {
         //check if coupon exists
         if (!$record = CouponCode::where('code', $code)->first()) {
@@ -17,7 +17,7 @@ class CouponCodesController extends Controller
         }
 
         //if coupon does not activate, means coupon do not exit
-        $record->checkAvailable();
+        $record->checkAvailable($request->user());
 
 //        if (!$record->enabled) {
 //            abort(404);
