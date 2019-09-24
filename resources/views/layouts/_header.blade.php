@@ -4,10 +4,9 @@
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#app-navbar-collapse">
                 <span class="sr-only">Toggle Navigation</span>
-                <span class="icon-bar">test 1</span>
-                <span class="icon-bar">test 2</span>
-                <span class="icon-bar">test 3</span>
-                test 4
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
             </button>
 
             <a class="navbar-brand" href="{{ url('/') }}">
